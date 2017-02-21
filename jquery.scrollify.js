@@ -46,6 +46,28 @@ if touchScroll is false - update index
 	}
 }(typeof window !== 'undefined' ? window : this, function ($, window, document, undefined) {
 	"use strict";
+
+	var settings = {
+		//section should be an identifier that is the same for each section
+		section: ".section",
+		sectionName: "section-name",
+		interstitialSection: "",
+		easing: "easeOutExpo",
+		scrollSpeed: 1100,
+		offset : 0,
+		scrollbars: true,
+		target:"html,body",
+		standardScrollElements: false,
+		setHeights: true,
+		overflowScroll:true,
+		updateHash: true,
+		touchScroll:true,
+		before:function() {},
+		after:function() {},
+		afterResize:function() {},
+		afterRender:function() {}
+	};
+
 	var heights = [],
 		names = [],
 		elements = [],
@@ -56,8 +78,7 @@ if touchScroll is false - update index
 		hasLocation = false,
 		timeoutId,
 		timeoutId2,
-		$window = $(window),
-		top = $window.scrollTop(),
+		top = $(settings.target).scrollTop(),
 		scrollable = false,
 		locked = false,
 		scrolled = false,
@@ -70,27 +91,8 @@ if touchScroll is false - update index
 		firstLoad = true,
 		initialised = false,
 		destination = 0,
-		wheelEvent = 'onwheel' in document ? 'wheel' : document.onmousewheel !== undefined ? 'mousewheel' : 'DOMMouseScroll',
-		settings = {
-			//section should be an identifier that is the same for each section
-			section: ".section",
-			sectionName: "section-name",
-			interstitialSection: "",
-			easing: "easeOutExpo",
-			scrollSpeed: 1100,
-			offset : 0,
-			scrollbars: true,
-			target:"html,body",
-			standardScrollElements: false,
-			setHeights: true,
-			overflowScroll:true,
-			updateHash: true,
-			touchScroll:true,
-			before:function() {},
-			after:function() {},
-			afterResize:function() {},
-			afterRender:function() {}
-		};
+		wheelEvent = 'onwheel' in document ? 'wheel' : document.onmousewheel !== undefined ? 'mousewheel' : 'DOMMouseScroll';
+
 	function animateScroll(index,instant,callbacks,toTop) {
 		if(currentIndex===index) {
 			callbacks = false;
@@ -109,9 +111,9 @@ if touchScroll is false - update index
 				//We're going backwards
 				if(overflow[index]) {
 
-					interstitialIndex = parseInt(elements[index].outerHeight()/$window.height());
+					interstitialIndex = parseInt(elements[index].outerHeight()/$(settings.target).height());
 
-					destination = parseInt(heights[index])+(elements[index].outerHeight()-$window.height());
+					destination = parseInt(heights[index])+(elements[index].outerHeight()-$(settings.target).height());
 				}
 			}
 
@@ -241,7 +243,7 @@ if touchScroll is false - update index
 				}, 200);
 			},
 			calculateNearest:function(instant,callbacks) {
-				top = $window.scrollTop();
+				top = $(settings.target).scrollTop();
 				var i =1,
 					max = heights.length,
 					closest = 0,
@@ -362,15 +364,15 @@ if touchScroll is false - update index
 			},
 			init:function() {
 				if(settings.scrollbars) {
-					$window.on('mousedown', manualScroll.handleMousedown);
-					$window.on('mouseup', manualScroll.handleMouseup);
-					$window.on('scroll', manualScroll.handleScroll);
+					$(settings.target).on('mousedown', manualScroll.handleMousedown);
+					$(settings.target).on('mouseup', manualScroll.handleMouseup);
+					$(settings.target).on('scroll', manualScroll.handleScroll);
 				} else {
 					$("body").css({"overflow":"hidden"});
 				}
-				$window.on(wheelEvent,manualScroll.wheelHandler);
+				$(settings.target).on(wheelEvent,manualScroll.wheelHandler);
 				//$(document).bind(wheelEvent,manualScroll.wheelHandler);
-				$window.on('keydown', manualScroll.keyHandler);
+				$(settings.target).on('keydown', manualScroll.keyHandler);
 			}
 		};
 
@@ -470,13 +472,13 @@ if touchScroll is false - update index
 						//index, instant, callbacks, toTop
 						animateScroll(index,false,true,false);
 					} else {
-						if(Math.floor(elements[index].height()/$window.height())>interstitialIndex) {
+						if(Math.floor(elements[index].height()/$(settings.target).height())>interstitialIndex) {
 
-							interstitialScroll(parseInt(heights[index])+($window.height()*interstitialIndex));
+							interstitialScroll(parseInt(heights[index])+($(settings.target).height()*interstitialIndex));
 							interstitialIndex += 1;
 
 						} else {
-							interstitialScroll(parseInt(heights[index])+(elements[index].height()-$window.height()));
+							interstitialScroll(parseInt(heights[index])+(elements[index].height()-$(settings.target).height()));
 						}
 
 					}
@@ -494,7 +496,7 @@ if touchScroll is false - update index
 						if(interstitialIndex>2) {
 
 							interstitialIndex -= 1;
-							interstitialScroll(parseInt(heights[index])+($window.height()*interstitialIndex));
+							interstitialScroll(parseInt(heights[index])+($(settings.target).height()*interstitialIndex));
 
 						} else {
 
@@ -559,7 +561,7 @@ if touchScroll is false - update index
 			manualScroll.init();
 			swipeScroll.init();
 
-			$window.on("resize",util.handleResize);
+			$(settings.target).on("resize",util.handleResize);
 			if (document.addEventListener) {
 				window.addEventListener("orientationchange", util.handleOrientation, false);
 			}
@@ -596,8 +598,8 @@ if touchScroll is false - update index
 						overflow[i] = false;
 					} else {
 
-						if(($this.css("height","auto").outerHeight()<$window.height()) || $this.css("overflow")==="hidden") {
-							$this.css({"height":$window.height()});
+						if(($this.css("height","auto").outerHeight()<$(settings.target).height()) || $this.css("overflow")==="hidden") {
+							$this.css({"height":$(settings.target).height()});
 
 							overflow[i] = false;
 						} else {
@@ -615,7 +617,7 @@ if touchScroll is false - update index
 
 				} else {
 
-					if(($this.outerHeight()<$window.height()) || (settings.overflowScroll===false)) {
+					if(($this.outerHeight()<$(settings.target).height()) || (settings.overflowScroll===false)) {
 						overflow[i] = false;
 					} else {
 						overflow[i] = true;
@@ -674,7 +676,7 @@ if touchScroll is false - update index
 			if(!overflow[index]) {
 				return true;
 			}
-			top = $window.scrollTop();
+			top = $(settings.target).scrollTop();
 			if(top>parseInt(heights[index])) {
 				return false;
 			} else {
@@ -685,9 +687,9 @@ if touchScroll is false - update index
 			if(!overflow[index]) {
 				return true;
 			}
-			top = $window.scrollTop();
+			top = $(settings.target).scrollTop();
 
-			if(top<parseInt(heights[index])+(elements[index].outerHeight()-$window.height())-28) {
+			if(top<parseInt(heights[index])+(elements[index].outerHeight()-$(settings.target).height())-28) {
 
 				return false;
 
@@ -767,14 +769,14 @@ if touchScroll is false - update index
 				$(this).css("height","auto");
 			});
 		}
-		$window.off("resize",util.handleResize);
+		$(settings.target).off("resize",util.handleResize);
 		if(settings.scrollbars) {
-			$window.off('mousedown', manualScroll.handleMousedown);
-			$window.off('mouseup', manualScroll.handleMouseup);
-			$window.off('scroll', manualScroll.handleScroll);
+			$(settings.target).off('mousedown', manualScroll.handleMousedown);
+			$(settings.target).off('mouseup', manualScroll.handleMouseup);
+			$(settings.target).off('scroll', manualScroll.handleScroll);
 		}
-		$window.off(wheelEvent,manualScroll.wheelHandler);
-		$window.off('keydown', manualScroll.keyHandler);
+		$(settings.target).off(wheelEvent,manualScroll.wheelHandler);
+		$(settings.target).off('keydown', manualScroll.keyHandler);
 
 		if (document.addEventListener && settings.touchScroll) {
 			document.removeEventListener('touchstart', swipeScroll.touchHandler, false);
